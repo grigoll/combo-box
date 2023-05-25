@@ -9,3 +9,13 @@
 ```
 yarn dev
 ```
+
+## Details
+
+```
+Platform: MacOS
+Software Development kit (SDK): None
+Language: TypeScript
+Libraries: React, Styled Components, ESLint
+Dev tooling: Vite
+```
