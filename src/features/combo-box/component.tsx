@@ -1,40 +1,50 @@
 import { ChangeEvent, useCallback, useMemo } from 'react';
 import { styled } from 'styled-components';
+import { ArrowDown, ArrowUp } from '../../components/icon';
 import { Input } from '../../components/input';
+import { useDropdownListA11y } from '../../hooks/dropdown-list-a11y.hook';
 import { useComboBox } from './hook';
 import { ComboBoxOptions, ComboBoxOptionsProps } from './options.component';
-import { ArrowDown, ArrowUp } from '../../components/icon';
 
 export type ComboBoxProps<T> = Pick<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder'> & {
   options: T[];
   renderItem: (item: T, selected: boolean) => React.ReactNode;
+  onSearch: (term: string) => void;
   onSelect?: (item: T) => void;
 };
 
 export const ComboBox = <T extends { label: string }>(props: ComboBoxProps<T>) => {
-  const { options, onSelect, placeholder, renderItem } = props;
+  const { options, onSelect, onSearch, placeholder, renderItem } = props;
 
   const {
     selectOption,
     isOptionSelected,
-
     inputRef,
     inputValue,
-    setInputValue,
-
+    updateInputValue,
     isDropdownVisible,
-    onFocus,
-    onBlur,
-  } = useComboBox<T>({ onSelect });
+    showDropdown,
+    hideDropdown,
+  } = useComboBox<T>({ onSelect, onSearch });
 
-  const filteredOptions = useMemo(
-    () =>
-      inputValue
-        ? options.filter((item) =>
-            item.label.trim().toLocaleLowerCase().includes(inputValue.trim().toLocaleLowerCase())
-          )
-        : options,
-    [inputValue, options]
+  const {
+    focusedOptionRef,
+    focusedOptionIndex,
+    resetFocusedOptionIndex,
+    keyboardNavigationListener,
+    onMouseMoveInsideDropdown,
+  } = useDropdownListA11y<T, HTMLLIElement>({
+    options,
+    onSelect: selectOption,
+    onShowDropdown: showDropdown,
+  });
+
+  const a11y = useMemo(
+    () => ({
+      focusedOptionRef,
+      focusedOptionIndex,
+    }),
+    [focusedOptionIndex, focusedOptionRef]
   );
 
   const keyExtractor = useCallback<ComboBoxOptionsProps<T>['keyExtractor']>(
@@ -47,37 +57,49 @@ export const ComboBox = <T extends { label: string }>(props: ComboBoxProps<T>) =
     [renderItem, isOptionSelected]
   );
 
-  const onChange = useCallback(
-    ({ target }: ChangeEvent<HTMLInputElement>) => setInputValue(target.value),
-    [setInputValue]
+  const updateInput = useCallback(
+    ({ target }: ChangeEvent<HTMLInputElement>) => {
+      updateInputValue(target.value);
+      showDropdown();
+      resetFocusedOptionIndex();
+    },
+    [showDropdown, resetFocusedOptionIndex, updateInputValue]
+  );
+
+  const handleSelect = useCallback<ComboBoxOptionsProps<T>['onSelect']>(
+    (item) => {
+      selectOption(item);
+      resetFocusedOptionIndex();
+    },
+    [resetFocusedOptionIndex, selectOption]
   );
 
   return (
-    <Root>
-      <InputContainer focused={isDropdownVisible}>
+    <Root onKeyDown={keyboardNavigationListener}>
+      <InputContainer dropdownVisible={isDropdownVisible}>
         <Input
           placeholder={placeholder}
           ref={inputRef}
           value={inputValue}
-          onChange={onChange}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          // onClick={showDropdown}
+          onChange={updateInput}
+          onFocus={showDropdown}
+          onBlur={hideDropdown}
         />
 
         {isDropdownVisible ? <ArrowUp /> : <ArrowDown />}
       </InputContainer>
 
       {isDropdownVisible && (
-        <DropdownContainer>
-          {filteredOptions.length === 0 ? (
+        <DropdownContainer onMouseMove={onMouseMoveInsideDropdown}>
+          {options.length === 0 ? (
             <EmptyOptionsMessage>No match</EmptyOptionsMessage>
           ) : (
             <ComboBoxOptions
               keyExtractor={keyExtractor}
-              options={filteredOptions}
+              options={options}
               renderOption={renderOption}
-              onSelect={selectOption}
+              onSelect={handleSelect}
+              a11y={a11y}
             />
           )}
         </DropdownContainer>
@@ -94,20 +116,19 @@ const Root = styled.div({
 });
 
 const InputContainer = styled.div.withConfig({
-  shouldForwardProp: (prop) => !['focused'].includes(prop),
-})<{ focused: boolean }>(({ theme, focused }) => ({
+  shouldForwardProp: (prop) => !['dropdownVisible'].includes(prop),
+})<{ dropdownVisible: boolean }>(({ theme, dropdownVisible }) => ({
   flex: 1,
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'center',
   border: `2px solid transparent`,
-  borderBottom: 'none',
   borderTopLeftRadius: theme.sizing.radius,
   borderTopRightRadius: theme.sizing.radius,
   padding: theme.spacing(1.5),
-  backgroundColor: focused ? '#fff' : '#f5f5f5',
+  backgroundColor: dropdownVisible ? '#fff' : '#f5f5f5',
   '&:focus-within': { borderColor: '#5e93f5' },
-  ...(focused ? null : { borderRadius: 8 }),
+  ...(dropdownVisible ? { borderBottom: 'none' } : { borderRadius: 8 }),
 }));
 
 const DropdownContainer = styled.div(({ theme }) => ({

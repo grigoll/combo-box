@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 type Args<T> = {
   onSelect?: (value: T) => void;
+  onSearch: (term: string) => void;
 };
 
-export function useComboBox<T extends { label: string }>(args: Args<T>) {
-  const { onSelect } = args;
-
+export function useComboBox<T extends { label: string }>({ onSelect, onSearch }: Args<T>) {
   const [selected, setSelected] = useState<T | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isDropdownVisible, setDropdownVisibility] = useState(false);
@@ -18,37 +17,43 @@ export function useComboBox<T extends { label: string }>(args: Args<T>) {
     [selected]
   );
 
-  const selectOption = useCallback(
-    (item: T) => {
-      setSelected(item);
-      onSelect?.(item);
+  const updateInputValue = useCallback(
+    (value: string) => {
+      setInputValue(value);
+      onSearch(value);
     },
-    [onSelect]
+    [onSearch]
   );
 
-  const onBlur = useCallback(() => {
-    setInputValue(selected?.label ?? '');
+  const hideDropdown = useCallback(() => {
+    updateInputValue(selected?.label ?? ''); // reset input to prev selected value
     setDropdownVisibility(false);
-  }, [selected]);
+  }, [selected?.label, updateInputValue]);
 
-  const onFocus = useCallback(() => {
+  const showDropdown = useCallback(() => {
     setDropdownVisibility(true);
   }, []);
 
-  useEffect(() => {
-    setInputValue(selected?.label ?? '');
-  }, [selected]);
+  const selectOption = useCallback(
+    (item: T) => {
+      hideDropdown();
+      setSelected(item);
+      updateInputValue(item.label);
+      onSelect?.(item);
+    },
+    [hideDropdown, onSelect, updateInputValue]
+  );
 
   return {
     inputRef,
     inputValue,
-    setInputValue,
+    updateInputValue,
 
     selectOption,
     isOptionSelected,
 
     isDropdownVisible,
-    onBlur,
-    onFocus,
+    hideDropdown: hideDropdown,
+    showDropdown: showDropdown,
   };
 }
