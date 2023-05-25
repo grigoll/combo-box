@@ -31,7 +31,7 @@ export const ComboBox = <T extends { label: string }>(props: ComboBoxProps<T>) =
     () =>
       inputValue
         ? options.filter((item) =>
-            item.label.toLocaleLowerCase().includes(inputValue.toLocaleLowerCase())
+            item.label.trim().toLocaleLowerCase().includes(inputValue.trim().toLocaleLowerCase())
           )
         : options,
     [inputValue, options]
@@ -93,7 +93,9 @@ const Root = styled.div({
   backgroundColor: '#fff',
 });
 
-const InputContainer = styled.div<{ focused: boolean }>(({ theme, focused }) => ({
+const InputContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => !['focused'].includes(prop),
+})<{ focused: boolean }>(({ theme, focused }) => ({
   flex: 1,
   display: 'flex',
   flexWrap: 'wrap',
@@ -112,7 +114,7 @@ const DropdownContainer = styled.div(({ theme }) => ({
   position: 'absolute',
   inset: 'auto 0 0 0',
   transform: 'translateY(100%)',
-  maxHeight: 400,
+  maxHeight: 300,
   overflow: 'auto',
   border: `2px solid #5e93f5`,
   borderTop: 'none',

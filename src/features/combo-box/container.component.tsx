@@ -23,6 +23,20 @@ export const ComboBoxContainer = () => {
       { icon: '🍌', label: 'Banana' },
       { icon: '🫐', label: 'Blueberry' },
       { icon: '🥭', label: 'Mango' },
+      { icon: '🍇', label: 'Grape' },
+      { icon: '🍊', label: 'Orange' },
+      { icon: '🍓', label: 'Strawberry' },
+      { icon: '🍑', label: 'Peach' },
+      { icon: '🍍', label: 'Pineapple' },
+      { icon: '🥝', label: 'Kiwi' },
+      { icon: '🍒', label: 'Cherry' },
+      { icon: '🍅', label: 'Tomato' },
+      { icon: '🍈', label: 'Melon' },
+      { icon: '🍋', label: 'Lemon' },
+      { icon: '🍐', label: 'Pear' },
+      { icon: '🥥', label: 'Coconut' },
+      { icon: '🍏', label: 'Green Apple' },
+      { icon: '🍋', label: 'Lime' },
     ],
     []
   );
@@ -40,10 +54,16 @@ export const ComboBoxContainer = () => {
 };
 
 const Root = styled.div`
-  height: 100%;
+  /* max-height: 100vh;
+  max-width: 100vw; */
+  height: 100vh;
+  width: 100vw;
+  overflow: auto;
   display: flex;
-  align-items: center;
+  padding: 50px;
+  align-items: flex-start;
   justify-content: center;
+  /* background-color: red; */
 `;
 
 const OptionRoot = styled.div`
