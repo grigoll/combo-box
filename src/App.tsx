@@ -1,15 +1,13 @@
+import { FC } from 'react';
 import { ThemeProvider } from 'styled-components';
+import { ComboBoxContainer } from './features/combo-box/container.component';
 import { GlobalStyle, theme } from './theming';
 
-function App() {
-  return <>APP</>;
-}
+const App: FC = () => (
+  <ThemeProvider theme={theme}>
+    <GlobalStyle />
+    <ComboBoxContainer />
+  </ThemeProvider>
+);
 
-export default function Shell() {
-  return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyle />
-      <App />
-    </ThemeProvider>
-  );
-}
+export default App;
